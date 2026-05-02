@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GeoGrade IA - Gestão Inteligente</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['Outfit', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- CSS Customizado -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- html2pdf -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <!-- React (CDN) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Babel (CDN) para JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-[#F8FAFC] font-sans text-slate-800 antialiased selection:bg-indigo-200">
+    <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+        const { useState, useEffect } = React;
+
+        const Icons = {
+            Globe: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            ),
+            LayoutDashboard: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            ),
+            BrainCircuit: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .52 8.105 4 4 0 0 0 5.327 2.031"/><path d="M9 13a3 3 0 1 1 3 3"/><path d="M16 5a3 3 0 0 0-5.997.125 4 4 0 0 1-2.526 5.77 4 4 0 0 1 .52 8.105 4 4 0 0 1 5.327 2.031"/><path d="M15 13a3 3 0 1 0 3 3"/></svg>
+            ),
+            Users: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            ),
+            Plus: (props) => (
+                <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            ),
+            Trash2: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+            ),
+            Send: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polyline points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            ),
+            TrendingUp: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            ),
+            LogOut: (props) => (
+                <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            ),
+            FilePlus: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14.5 2 14.5 7.5 20 7.5"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+            ),
+            Edit: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+            ),
+            Menu: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+            ),
+            X: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            ),
+            BookOpen: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            ),
+            Zap: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            ),
+            Sparkles: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
+            ),
+            FileText: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14.5 2 14.5 7.5 20 7.5"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
+            ),
+            FilePdf: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14.5 2 14.5 7.5 20 7.5"/><path d="M8 13h2a2 2 0 1 0 0-4H8v8"/><path d="M14 17h-2v-8h2a2 2 0 1 1 0 4h-2"/></svg>
+            ),
+            MessageCircle: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+            ),
+            Download: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            )
+        };
+
+        // Firebase values will be hydrated inside initApp()
+        let db;
+        let auth;
+        let onSnapshot, query, collection, where, addDoc, deleteDoc, doc, updateDoc;
+        let onAuthStateChanged, signInWithPopup, signOut, GoogleAuthProvider;
+
+        // Gemini REST API Wrapper
+        const aiGenerateContent = async (requestBody) => {
+            let apiKey = localStorage.getItem('GEMINI_API_KEY');
+            if (!apiKey) {
+                apiKey = prompt("Por favor, informe sua chave API do Google Gemini para utilizar as funções de IA:");
+                if (apiKey) {
+                    localStorage.setItem('GEMINI_API_KEY', apiKey);
+                } else {
+                    throw new Error("API Key não fornecida. A funcionalidade de IA foi cancelada.");
+                }
+            }
+
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestBody)
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                if(response.status === 400 && err?.error?.message?.includes('API key')) {
+                    localStorage.removeItem('GEMINI_API_KEY');
+                    throw new Error("Chave API inválida! Foi removida. Tente novamente.");
+                }
+                throw new Error(err?.error?.message || "Erro na geração com IA");
+            }
+
+            const data = await response.json();
+            return data.candidates[0].content.parts[0].text;
+        };
+
+
+        const StudentsView = ({ classes, user }) => {
+            const [selectedClassId, setSelectedClassId] = useState('');
+            const [students, setStudents] = useState([]);
+            const [newStudentName, setNewStudentName] = useState('');
+
+            useEffect(() => {
+                let unsubscribe = () => {};
+                if (selectedClassId && user) {
+                    try {
+                        unsubscribe = onSnapshot(query(collection(db, 'students'), where('classId', '==', selectedClassId), where('teacherId', '==', user.uid)), snap => {
+                                setStudents(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+                            }, (err) => {
+                                console.error("Erro Snapshot Alunos:", err);
+                            });
+                    } catch (e) { console.error(e); }
+                } else {
+                    setStudents([]);
+                }
+                return () => unsubscribe();
+            }, [selectedClassId, user]);
+
+            const addStudent = async () => {
+                if (!newStudentName.trim() || !selectedClassId || !user) return;
+                try {
+                    await addDoc(collection(db, 'students'), {
+                        name: newStudentName,
+                        classId: selectedClassId,
+                        teacherId: user.uid,
+                        grades: {},
+                        createdAt: new Date().toISOString()
+                    });
+                    setNewStudentName('');
+                } catch (e) {
+                    console.error("Erro ao adicionar aluno:", e);
+                }
+            };
+
+            const removeStudent = async (id) => {
+                try {
+                    await deleteDoc(doc(db, 'students', id));
+                } catch (e) {
+                    console.error("Erro ao remover aluno:", e);
+                }
+            };
+
+            const [editingStudentId, setEditingStudentId] = useState(null);
+            const [editName, setEditName] = useState('');
+
+            const startEdit = (student) => {
+                setEditingStudentId(student.id);
+                setEditName(student.name);
+            };
+
+            const saveEdit = async (id) => {
+                if (editName.trim() !== "") {
+                    try {
+                        await updateDoc(doc(db, 'students', id), {
+                            name: editName.trim()
+                        });
+                        setEditingStudentId(null);
+                    } catch (e) {
+                        console.error("Erro ao editar aluno:", e);
+                    }
+                }
+            };
+
+            const cancelEdit = () => {
+                setEditingStudentId(null);
+                setEditName('');
+            };
+
+            return (
+                <div className="space-y-6 animate-fade-in max-w-4xl mx-auto">
+                    <div className="bg-white/80 backdrop-blur-xl p-10 rounded-[40px] border border-white neo-shadow space-y-8">
+                        <div className="flex bg-gradient-to-r items-center gap-4 pb-4 border-b border-slate-100/50">
+                            <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-[16px] flex items-center justify-center text-white shadow-lg"><Icons.Users /></div>
+                            <h3 className="text-2xl font-bold font-heading text-slate-900 tracking-tight">Gestão de Alunos</h3>
+                        </div>
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-slate-50/50 p-6 rounded-[24px] border border-slate-100/50">
+                            <div className="flex-1">
+                                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">Selecionar Turma</label>
+                                <select 
+                                    className="w-full p-4 bg-white border border-slate-200 rounded-xl outline-none focus:border-slate-800 focus:ring-4 focus:ring-slate-800/10 transition-all font-medium text-slate-700"
+                                    value={selectedClassId}
+                                    onChange={e => setSelectedClassId(e.target.value)}
+                                >
+                                    <option value="">Selecione uma turma...</option>
+                                    {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                </select>
+                            </div>
+                            <div className="flex-1">
+                                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">Adicionar Aluno</label>
+                                <div className="flex gap-2">
+                                    <input 
+                                        className="flex-1 p-4 bg-white border border-slate-200 rounded-xl outline-none focus:border-slate-800 focus:ring-4 focus:ring-slate-800/10 transition-all font-medium text-slate-700"
+                                        placeholder="Nome do aluno"
+                                        value={newStudentName}
+                                        onChange={e => setNewStudentName(e.target.value)}
+                                        onKeyPress={e => e.key === 'Enter' && addStudent()}
+                                    />
+                                    <button 
+                                        onClick={addStudent}
+                                        className="bg-slate-900 text-white p-4 rounded-xl hover:bg-slate-800 hover:-translate-y-1 active:translate-y-0 transition-all shadow-md shadow-slate-900/10"
+                                    >
+                                        <Icons.Plus />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {selectedClassId && (
+                            <div className="overflow-hidden border border-slate-100/50 rounded-[32px] shadow-sm bg-white/50 backdrop-blur-md">
+                                <table className="w-full text-left">
+                                    <thead className="bg-white/60 border-b border-slate-100/50 text-slate-500 backdrop-blur-md">
+                                        <tr>
+                                            <th className="px-8 py-6 text-[11px] font-bold uppercase tracking-widest text-slate-400">Aluno</th>
+                                            <th className="px-8 py-6 text-[11px] font-bold uppercase tracking-widest text-right text-slate-400">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100/50">
+                                        {students.map((s, idx) => (
+                                            <tr key={s.id} className="hover:bg-white transition-all duration-300 group" style={{ animationDelay: `${idx * 40}ms` }}>
+                                                <td className="px-8 py-5">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 text-emerald-600 flex items-center justify-center font-bold text-sm shadow-sm border border-emerald-200/50">
+                                                            {s.name.charAt(0).toUpperCase()}
+                                                        </div>
+                                                        {editingStudentId === s.id ? (
+                                                            <input 
+                                                                autoFocus
+                                                                type="text" 
+                                                                value={editName}
+                                                                onChange={(e) => setEditName(e.target.value)}
+                                                                className="border border-slate-200/60 rounded-[12px] px-4 py-2 outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 w-full max-w-xs transition-all text-[15px] font-bold font-heading text-slate-800"
+                                                                onKeyPress={(e) => e.key === 'Enter' && saveEdit(s.id)}
+                                                            />
+                                                        ) : (
+                                                            <span className="font-bold text-[15px] text-slate-800 font-heading tracking-tight">{s.name}</span>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                <td className="px-8 py-5 text-right flex justify-end gap-3">
+                                                    {editingStudentId === s.id ? (
+                                                        <>
+                                                            <button onClick={() => saveEdit(s.id)} className="text-emerald-600 hover:text-white bg-emerald-50 hover:bg-emerald-500 px-4 py-2 rounded-[16px] transition-all text-[11px] font-bold uppercase tracking-widest border border-emerald-200/60 hover:shadow-md hover:shadow-emerald-500/20 active:scale-95">
+                                                                Salvar
+                                                            </button>
+                                                            <button onClick={cancelEdit} className="text-slate-500 hover:text-slate-700 bg-white px-4 py-2 rounded-[16px] border border-slate-200/60 transition-all text-[11px] font-bold uppercase tracking-widest hover:shadow-sm hover:bg-slate-50 active:scale-95">
+                                                                Cancelar
+                                                            </button>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <button onClick={() => startEdit(s)} className="text-slate-400 bg-white border border-slate-100 p-3 rounded-[16px] hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all hover:-translate-y-1 hover:shadow-md opacity-0 group-hover:opacity-100 focus:opacity-100" title="Editar aluno">
+                                                                <div className="w-4 h-4"><Icons.Edit /></div>
+                                                            </button>
+                                                            <button onClick={() => removeStudent(s.id)} className="text-slate-400 bg-white border border-slate-100 p-3 rounded-[16px] hover:text-red-600 hover:border-red-200 hover:bg-red-50 transition-all hover:-translate-y-1 hover:shadow-md opacity-0 group-hover:opacity-100 focus:opacity-100" title="Remover aluno">
+                                                                <div className="w-4 h-4"><Icons.Trash2 /></div>
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        {students.length === 0 && (
+                                            <tr>
+                                                <td colSpan="2" className="px-8 py-20 text-center">
+                                                    <div className="w-20 h-20 bg-white rounded-[24px] mx-auto mb-6 shadow-sm border border-slate-100 flex items-center justify-center opacity-75">
+                                                        <Icons.Users className="w-8 h-8 text-slate-300" />
+                                                    </div>
+                                                    <p className="text-slate-500 font-bold text-lg font-heading">Nenhum aluno matriculado</p>
+                                                    <p className="text-slate-400 mt-2 text-[15px]">Adicione alunos usando o formulário acima.</p>
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        const GradebookView = ({ classes, user }) => {
+            const [selectedClassId, setSelectedClassId] = useState('');
+            const [students, setStudents] = useState([]);
+            const [periods, setPeriods] = useState([]);
+            const [selectedPeriodId, setSelectedPeriodId] = useState('');
+            
+            const [isManagingPeriods, setIsManagingPeriods] = useState(false);
+            const [newPeriodName, setNewPeriodName] = useState('');
+            const [newPeriodStart, setNewPeriodStart] = useState('');
+            const [newPeriodEnd, setNewPeriodEnd] = useState('');
+
+            const [assessments] = useState(['P1', 'P2', 'Trab']);
+
+            useEffect(() => {
+                if (selectedClassId && user) {
+                    const unsubStudents = onSnapshot(query(collection(db, 'students'), where('classId', '==', selectedClassId), where('teacherId', '==', user.uid)), snap => {
+                        setStudents(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+                    });
+                    const unsubPeriods = onSnapshot(query(collection(db, 'periods'), where('classId', '==', selectedClassId), where('teacherId', '==', user.uid)), snap => {
+                        setPeriods(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+                    });
+                    return () => {
+                        unsubStudents();
+                        unsubPeriods();
+                    };
+                } else {
+                    setStudents([]);
+                    setPeriods([]);
+                }
+            }, [selectedClassId, user]);
+
+            useEffect(() => {
+                if (periods.length > 0 && !periods.find(p => p.id === selectedPeriodId)) {
+                    setSelectedPeriodId(periods[0].id);
+                }
+            }, [periods, selectedPeriodId]);
+
+            const updateGrade = async (studentId, assessment, value) => {
+                if (!selectedPeriodId) return alert("Selecione um período primeiro.");
+                const student = students.find(s => s.id === studentId);
+                const periodKey = `${selectedPeriodId}_${assessment}`;
+                const grades = { ...(student.grades || {}), [periodKey]: value };
+                await updateDoc(doc(db, 'students', studentId), { grades });
+            };
+
+            const addPeriod = async () => {
+                if (!newPeriodName || !newPeriodStart || !newPeriodEnd || !selectedClassId || !user) return;
+                try {
+                    await addDoc(collection(db, 'periods'), {
+                        name: newPeriodName,
+                        classId: selectedClassId,
+                        teacherId: user.uid,
+                        startDate: newPeriodStart,
+                        endDate: newPeriodEnd,
+                        createdAt: new Date().toISOString()
+                    });
+                    setNewPeriodName('');
+                    setNewPeriodStart('');
+                    setNewPeriodEnd('');
+                } catch (e) {
+                    console.error("Erro ao adicionar período:", e);
+                }
+            };
+            
+            const removePeriod = async (id) => {
+                try {
+                    await deleteDoc(doc(db, 'periods', id));
+                } catch(e) {
+                    console.error("Erro ao apagar período", e);
+                }
+            };
+
+            return (
+                <div className="space-y-8 animate-fade-in">
+                    <div className="bg-white/80 backdrop-blur-xl p-10 rounded-[40px] border border-white neo-shadow space-y-8 overflow-x-auto">
+                        <div className="flex flex-col md:flex-row items-start lg:items-center justify-between gap-6 pb-6 border-b border-slate-100/50">
+                            <div className="flex bg-gradient-to-r items-center gap-4">
+                                <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-[16px] flex items-center justify-center text-white shadow-lg"><Icons.BookOpen /></div>
+                                <h3 className="text-2xl font-bold font-heading text-slate-900 tracking-tight">Diário de Classe</h3>
+                            </div>
+                            <div className="flex flex-wrap lg:flex-nowrap gap-4 w-full md:w-auto">
+                                <select 
+                                    className="p-4 bg-white border border-slate-200 rounded-[16px] outline-none focus:border-slate-800 transition-all text-sm font-medium w-full md:w-auto text-slate-700 shadow-sm"
+                                    value={selectedClassId}
+                                    onChange={e => setSelectedClassId(e.target.value)}
+                                >
+                                    <option value="">Selecione a Turma...</option>
+                                    {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                </select>
+                                {selectedClassId && (
+                                    <>
+                                        {periods.length > 0 && !isManagingPeriods && (
+                                            <select 
+                                                className="p-4 bg-white border border-slate-200 rounded-[16px] outline-none focus:border-slate-800 transition-all text-sm font-medium w-full md:w-auto text-slate-700 shadow-sm"
+                                                value={selectedPeriodId}
+                                                onChange={e => setSelectedPeriodId(e.target.value)}
+                                            >
+                                                {periods.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                            </select>
+                                        )}
+                                        <button 
+                                            onClick={() => setIsManagingPeriods(!isManagingPeriods)} 
+                                            className={`px-5 py-4 border rounded-[16px] text-sm font-bold uppercase tracking-widest transition-all shadow-sm ${isManagingPeriods ? 'bg-slate-900 border-slate-900 text-emerald-400' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                        >
+                                            {isManagingPeriods ? 'Concluir' : 'Períodos'}
+                                        </button>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+
+                        {selectedClassId ? (
+                            isManagingPeriods ? (
+                                <div className="space-y-6 animate-fade-in bg-slate-50/50 p-8 rounded-[24px] border border-slate-100/50">
+                                    <h4 className="font-bold font-heading text-slate-900 text-lg mb-6">Gerenciar Bimestres/Semestres</h4>
+                                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
+                                        <div className="flex flex-col">
+                                            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Nome</span>
+                                            <input 
+                                                type="text" 
+                                                placeholder="Ex: 1º Bimestre" 
+                                                value={newPeriodName}
+                                                onChange={e => setNewPeriodName(e.target.value)}
+                                                className="p-4 bg-white border border-slate-200 rounded-[16px] outline-none text-sm focus:border-slate-800 focus:ring-4 focus:ring-slate-800/10 transition-all text-slate-700 shadow-sm"
+                                            />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Data Início</span>
+                                            <input 
+                                                type="date" 
+                                                value={newPeriodStart}
+                                                onChange={e => setNewPeriodStart(e.target.value)}
+                                                className="p-4 bg-white border border-slate-200 rounded-[16px] outline-none text-sm font-mono text-slate-500 focus:border-slate-800 focus:ring-4 focus:ring-slate-800/10 transition-all shadow-sm uppercase tracking-tighter"
+                                            />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Data Fim</span>
+                                            <input 
+                                                type="date" 
+                                                value={newPeriodEnd}
+                                                onChange={e => setNewPeriodEnd(e.target.value)}
+                                                className="p-4 bg-white border border-slate-200 rounded-[16px] outline-none text-sm font-mono text-slate-500 focus:border-slate-800 focus:ring-4 focus:ring-slate-800/10 transition-all shadow-sm uppercase tracking-tighter"
+                                            />
+                                        </div>
+                                        <div className="flex items-end">
+                                            <button onClick={addPeriod} className="p-4 bg-slate-900 text-white font-bold rounded-[16px] w-full hover:bg-slate-800 transition-all shadow-md shadow-slate-900/10 hover:-translate-y-0.5 active:translate-y-0 uppercase tracking-widest text-[11px]">
+                                                Adicionar Registo
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-4 mt-8">
+                                        {periods.map(p => (
+                                            <div key={p.id} className="flex justify-between items-center bg-white p-5 border border-slate-100 rounded-[20px] neo-shadow hover:-translate-y-1 transition-transform cursor-default">
+                                                <div>
+                                                    <h5 className="font-bold text-slate-900 text-lg mb-1">{p.name}</h5>
+                                                    <p className="text-xs text-slate-500 font-mono tracking-tighter">{p.startDate} → {p.endDate}</p>
+                                                </div>
+                                                <button onClick={() => removePeriod(p.id)} className="text-slate-400 hover:text-red-500 bg-white border border-slate-100 hover:bg-red-50 hover:border-red-100 transition-all p-3 rounded-[12px]">
+                                                    <div className="w-5 h-5"><Icons.Trash2 /></div>
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ) : (
+                                periods.length === 0 ? (
+                                    <div className="p-16 text-center text-slate-500 space-y-6 bg-slate-50/50 rounded-[32px] border border-slate-100">
+                                        <div className="w-24 h-24 bg-white rounded-[24px] mx-auto shadow-sm border border-slate-100 flex justify-center items-center opacity-50"><Icons.BookOpen width="32" height="32" /></div>
+                                        <p className="font-medium text-lg text-slate-600 max-w-sm mx-auto">Você ainda não configurou os períodos acadêmicos.</p>
+                                        <button onClick={() => setIsManagingPeriods(true)} className="px-8 py-4 bg-slate-900 text-white font-bold rounded-[16px] shadow-lg shadow-slate-900/20 hover:bg-slate-800 hover:-translate-y-1 active:translate-y-0 mx-auto transition-all text-sm">
+                                            Adicionar Períodos
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="border border-slate-100/50 rounded-[24px] overflow-hidden">
+                                        <table className="w-full text-left min-w-[600px] bg-white">
+                                            <thead className="bg-slate-50 border-b border-slate-100 text-slate-400">
+                                                <tr>
+                                                    <th className="px-8 py-5 text-[11px] font-bold uppercase tracking-widest">Estudante</th>
+                                                    {assessments.map(a => (
+                                                    <th key={a} className="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-center text-slate-400">{a}</th>
+                                                ))}
+                                                <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-center text-slate-400">Média Geral</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100/50 text-[13px] tracking-tight">
+                                            {students.map((s, idx) => {
+                                                const gradesList = assessments.map(a => parseFloat(s.grades?.[`${selectedPeriodId}_${a}`]) || 0);
+                                                const avg = (gradesList.reduce((acc, curr) => acc + curr, 0) / assessments.length).toFixed(1);
+                                                return (
+                                                    <tr key={s.id} className="hover:bg-white transition-colors duration-300 group" style={{ animationDelay: `${idx * 40}ms` }}>
+                                                        <td className="px-8 py-5">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center font-bold text-[11px] uppercase border border-slate-200">
+                                                                    {s.name.charAt(0)}
+                                                                </div>
+                                                                <span className="font-bold text-[15px] text-slate-800 font-heading">{s.name}</span>
+                                                            </div>
+                                                        </td>
+                                                        {assessments.map(a => {
+                                                            const gradeVal = s.grades?.[`${selectedPeriodId}_${a}`];
+                                                            const numVal = parseFloat(gradeVal);
+                                                            const colorClass = isNaN(numVal) ? 'text-slate-800' : numVal >= 6 ? 'text-emerald-600' : 'text-red-500';
+                                                            return (
+                                                                <td key={a} className="px-6 py-5 text-center">
+                                                                    <div className="relative inline-block group/input">
+                                                                        <input 
+                                                                            type="number"
+                                                                            step="0.5"
+                                                                            min="0"
+                                                                            max="10"
+                                                                            className={`w-20 p-2.5 bg-slate-50 border border-slate-200/80 rounded-[14px] focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 outline-none font-bold font-mono text-center transition-all group-hover:border-slate-300 shadow-sm ${colorClass}`}
+                                                                            value={gradeVal || ''}
+                                                                            onChange={e => updateGrade(s.id, a, e.target.value)}
+                                                                            placeholder="--"
+                                                                        />
+                                                                        <div className="absolute opacity-0 pointer-events-none group-focus-within/input:opacity-100 right-[-10px] top-1/2 -translate-y-1/2 flex items-center text-indigo-500">
+                                                                            <svg className="w-4 h-4 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                                                        </div>
+                                                                    </div>
+                                                                </td>
+                                                            );
+                                                        })}
+                                                        <td className="px-6 py-5 text-center">
+                                                            <div className={`inline-flex items-center justify-center w-14 h-10 rounded-[12px] font-bold font-mono text-xl ${parseFloat(avg) >= 6 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : parseFloat(avg) > 0 ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-slate-50 text-slate-400 border border-slate-100'}`}>
+                                                                {avg}
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                    </div>
+                                )
+                            )
+                        ) : (
+                            <div className="p-20 text-center space-y-4">
+                                <div className="w-20 h-20 bg-slate-50 rounded-[24px] flex items-center justify-center mx-auto mb-6 border border-slate-200/60 shadow-sm opacity-50"><Icons.BookOpen className="w-8 h-8 text-slate-400" /></div>
+                                <p className="text-slate-500 font-medium text-lg">Selecione uma turma para visualizar o diário.</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        const CorrectorView = ({ classes, user }) => {
+            const [selectedClass, setSelectedClass] = useState('');
+            const [question, setQuestion] = useState('');
+            const [answer, setAnswer] = useState('');
+            const [result, setResult] = useState(null);
+            const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+            const analyzeWithGemini = async () => {
+                if (!question || !answer) return alert("Preencha a pergunta e a resposta.");
+                
+                setIsAnalyzing(true);
+                try {
+                    const textResult = await aiGenerateContent({
+                        contents: [{
+                            parts: [{
+                                text: `Você é um professor de Geografia rigoroso mas pedagógico. 
+                                Analise a seguinte questão e a resposta dada pelo aluno.
+                                Questão: "${question}"
+                                Resposta do Aluno: "${answer}"
+                                
+                                Forneça sua análise no seguinte formato JSON estrito:
+                                {
+                                  "nota": (um número de 0 a 10),
+                                  "feedback": "uma explicação pedagógica curta",
+                                  "pontos_positivos": ["lista", "de", "pontos"],
+                                  "melhorias": ["lista", "de", "o", " que", "melhorar"]
+                                }
+                                Responda APENAS o JSON direto, sem markdown blocks.`
+                            }]
+                        }],
+                        generationConfig: {
+                            responseMimeType: "application/json"
+                        }
+                    });
+                    
+                    const jsonResult = JSON.parse(textResult || '{}');
+                    setResult(jsonResult);
+                    
+                    await addDoc(collection(db, 'corrections'), {
+                        teacherId: user.uid,
+                        className: classes.find((c) => c.id === selectedClass)?.name || 'N/A',
+                        question,
+                        answer,
+                        result: jsonResult,
+                        createdAt: new Date().toISOString()
+                    });
+                } catch (e) {
+                    console.error(e);
+                    alert("Erro ao analisar resposta: " + e.message);
+                } finally {
+                    setIsAnalyzing(false);
+                }
+            };
+
+            return (
+                <div className="max-w-4xl mx-auto space-y-8 animate-fade-in">
+                    <div className="bg-white/80 backdrop-blur-xl p-10 rounded-[40px] border border-white neo-shadow space-y-8">
+                        <div className="flex bg-gradient-to-r items-center gap-4 pb-4 border-b border-slate-100/50">
+                            <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-[16px] flex items-center justify-center text-white shadow-lg"><Icons.BrainCircuit /></div>
+                            <h3 className="text-2xl font-bold font-heading text-slate-900 tracking-tight">Correção Inteligente</h3>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/50 p-6 rounded-[24px] border border-slate-100/50">
+                            <div>
+                                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">Selecionar Turma</label>
+                                <select 
+                                    value={selectedClass} 
+                                    onChange={e => setSelectedClass(e.target.value)}
+                                    className="w-full p-4 bg-white border border-slate-200 rounded-xl outline-none focus:border-slate-800 focus:ring-4 focus:ring-slate-800/10 transition-all font-medium text-slate-700"
+                                >
+                                    <option value="">Selecione...</option>
+                                    {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                </select>
+                            </div>
+                            <div className="flex flex-col justify-end">
+                                <div className="bg-white border text-[11px] font-bold uppercase tracking-widest border-slate-100 p-4 rounded-[16px] shadow-sm flex items-center justify-between w-full">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-gradient-to-br from-slate-800 to-slate-900 text-white rounded-xl flex items-center justify-center shadow-md"><Icons.BrainCircuit width="20" height="20"/></div>
+                                        <div className="flex flex-col">
+                                            <span className="text-slate-900 font-bold leading-tight">GeoGrade <span className="text-blue-500 font-black">AI</span></span>
+                                            <span className="text-[9px] text-slate-400">Gemini 1.5 Flash</span>
+                                        </div>
+                                    </div>
+                                    <span className="text-emerald-500 flex items-center gap-1.5 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100"><span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span> ONLINE</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-slate-50/50 p-8 rounded-[32px] border border-slate-100/50 group relative overflow-hidden transition-all focus-within:bg-blue-50/30 focus-within:border-blue-100">
+                            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-focus-within:opacity-100 transition-opacity"></div>
+                            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-3 block relative z-10">Pergunta / Enunciado</label>
+                            <textarea 
+                                value={question}
+                                onChange={e => setQuestion(e.target.value)}
+                                placeholder="Digite a pergunta da prova ou atividade de geografia..."
+                                className="w-full p-0 bg-transparent border-none outline-none text-lg text-slate-800 placeholder-slate-400 h-24 resize-none relative z-10 focus:ring-0 leading-relaxed font-medium"
+                            />
+                        </div>
+
+                        <div className="bg-slate-50/50 p-8 rounded-[32px] border border-slate-100/50 group relative overflow-hidden transition-all focus-within:bg-indigo-50/30 focus-within:border-indigo-100">
+                             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-0 group-focus-within:opacity-100 transition-opacity"></div>
+                            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-3 block relative z-10">Resposta do Aluno</label>
+                            <textarea 
+                                value={answer}
+                                onChange={e => setAnswer(e.target.value)}
+                                placeholder="Cole ou digite a resposta escrita pelo aluno para análise..."
+                                className="w-full p-0 bg-transparent border-none outline-none text-lg text-slate-800 placeholder-slate-400 h-32 resize-none relative z-10 focus:ring-0 leading-relaxed font-medium"
+                            />
+                        </div>
+
+                        <button 
+                            onClick={analyzeWithGemini}
+                            disabled={isAnalyzing}
+                            className={`w-full p-6 text-lg rounded-[24px] font-bold flex items-center justify-center gap-3 transition-all duration-300 relative overflow-hidden group ${isAnalyzing ? 'bg-slate-100 text-slate-400' : 'bg-slate-900 text-white hover:bg-slate-800 shadow-xl shadow-slate-900/20 hover:-translate-y-1 glow-shadow'}`}
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                            <span className="relative z-10 flex items-center gap-3">
+                                {isAnalyzing ? (
+                                    <><div className="w-5 h-5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin"></div> Processando com IA...</>
+                                ) : (
+                                    <><Icons.BrainCircuit /> Solicitar Análise da IA</>
+                                )}
+                            </span>
+                        </button>
+                    </div>
+
+                    {result && (
+                        <div className="bg-white/80 backdrop-blur-xl p-10 rounded-[40px] border border-white neo-shadow space-y-8 animate-fade-in relative overflow-hidden mt-8">
+                            <div className="absolute -top-10 -right-10 p-8 opacity-[0.03] text-blue-900 pointer-events-none"><Icons.BrainCircuit width="240" height="240" /></div>
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 relative z-10 border-b border-slate-100/50 pb-6">
+                                <h3 className="text-2xl font-bold font-heading text-slate-900 tracking-tight">Resultado da Análise</h3>
+                                <div className="flex items-center gap-3 bg-slate-900 text-white px-6 py-3 rounded-[20px] shadow-lg shadow-slate-900/15">
+                                    <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Nota Final</span>
+                                    <span className="text-4xl font-bold font-mono leading-none tracking-tight">{result.nota}</span>
+                                </div>
+                            </div>
+                            
+                            <div className="p-8 bg-slate-50/50 rounded-[24px] border border-slate-100/50 relative z-10 shadow-inner">
+                                <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-4">Feedback Pedagógico</h4>
+                                <p className="text-slate-700 leading-relaxed font-medium text-[15px] italic">"{result.feedback}"</p>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
+                                <div className="space-y-5">
+                                    <h4 className="text-[11px] font-bold text-emerald-600 flex items-center gap-2 uppercase tracking-widest bg-emerald-50 w-fit px-3 py-1.5 rounded-lg border border-emerald-100">
+                                        <div className="w-1.5 h-1.5 bg-emerald-600 rounded-full animate-pulse"></div> Pontos Positivos
+                                    </h4>
+                                    <ul className="space-y-3">
+                                        {result.pontos_positivos?.map((p, i) => (
+                                            <li key={i} className="text-[14px] text-slate-700 bg-white border border-emerald-100/50 p-4 rounded-xl flex items-start gap-4 neo-shadow">
+                                                <div className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">✓</div>
+                                                <span className="pt-0.5">{p}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                                <div className="space-y-5">
+                                    <h4 className="text-[11px] font-bold text-amber-600 flex items-center gap-2 uppercase tracking-widest bg-amber-50 w-fit px-3 py-1.5 rounded-lg border border-amber-100">
+                                        <div className="w-1.5 h-1.5 bg-amber-600 rounded-full"></div> Oportunidades de Melhoria
+                                    </h4>
+                                    <ul className="space-y-3">
+                                        {result.melhorias?.map((p, i) => (
+                                            <li key={i} className="text-[14px] text-slate-700 bg-white border border-amber-100/50 p-4 rounded-xl flex items-start gap-4 neo-shadow">
+                                                <div className="w-6 h-6 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">→</div>
+                                                <span className="pt-0.5">{p}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <button 
+                                onClick={() => setResult(null)} 
+                                className="w-full py-5 bg-white border border-slate-200/60 rounded-[20px] text-slate-500 font-bold uppercase tracking-widest text-[11px] hover:text-slate-900 hover:border-slate-300 hover:bg-slate-50 transition-all relative z-10 hover-lift"
+                            >
+                                Limpar e Realizar Nova Correção
+                            </button>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const GeneratorView = ({ classes }) => {
+            const [selectedClass, setSelectedClass] = useState('');
+            const [topic, setTopic] = useState('');
+            const [isGenerating, setIsGenerating] = useState(false);
+            const [generatedContent, setGeneratedContent] = useState('');
+            const [waNumber, setWaNumber] = useState('');
+
+            const generateActivity = async () => {
+                if (!topic) return alert("Digite um tema.");
+
+                setIsGenerating(true);
+                try {
+                    const textResult = await aiGenerateContent({
+                        contents: [{
+                            parts: [{
+                                text: `Crie uma atividade de Geografia para o ensino fundamental/médio sobre o tema: "${topic}". 
+                                Inclua 2 questões dissertativas e 3 de múltipla escolha com gabarito. 
+                                Formate lindamente em HTML, usando tags como <h1>, <h2>, <p>, <ul>, <li>, <strong>, etc. Não use Markdown, use apenas tags HTML puras para a formatação para facilitar a exportação.`
+                            }]
+                        }]
+                    });
+                    
+                    // Cleanup possible markdown code block
+                    let cleanedData = textResult || '';
+                    if (cleanedData.startsWith('```html')) cleanedData = cleanedData.replace('```html\n', '');
+                    if (cleanedData.endsWith('```')) cleanedData = cleanedData.slice(0, -3);
+
+                    setGeneratedContent(cleanedData);
+                } catch (e) {
+                    console.error(e);
+                    alert("Erro ao gerar atividade: " + e.message);
+                } finally {
+                    setIsGenerating(false);
+                }
+            };
+
+            const exportToWord = () => {
+                const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Atividade GeoGrade</title></head><body>";
+                const footer = "</body></html>";
+                const sourceHTML = header + `<div style=\"font-family: Arial, sans-serif; line-height: 1.6; color: #333;\">${generatedContent}</div>` + footer;
+                const source = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(sourceHTML);
+                const fileDownload = document.createElement("a");
+                document.body.appendChild(fileDownload);
+                fileDownload.href = source;
+                fileDownload.download = 'atividade_geograde.doc';
+                fileDownload.click();
+                document.body.removeChild(fileDownload);
+            };
+
+            const exportToPDF = () => {
+                const element = document.getElementById('generated-content-wrapper');
+                if(!element || typeof html2pdf === 'undefined') {
+                    alert("Carregando recursos para PDF. Tente novamente em um instante.");
+                    return;
+                }
+                const opt = {
+                    margin:       0.5,
+                    filename:     'atividade_geograde.pdf',
+                    image:        { type: 'jpeg', quality: 0.98 },
+                    html2canvas:  { scale: 2, useCORS: true },
+                    jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+                };
+                html2pdf().set(opt).from(element).save();
+            };
+
+            const sendViaWhatsApp = () => {
+                if(!waNumber) {
+                    alert("Por favor, digite o número do WhatsApp com DDD.");
+                    return;
+                }
+                const num = waNumber.replace(/\D/g, '');
+                
+                // Need text format for whatsapp, not html
+                const tempDiv = document.createElement("div");
+                tempDiv.innerHTML = generatedContent;
+                const textContent = tempDiv.textContent || tempDiv.innerText || "";
+                
+                const text = encodeURIComponent("Olá! Aqui está a atividade gerada pelo GeoGrade IA:\n\n" + textContent);
+                window.open(`https://api.whatsapp.com/send?phone=${num}&text=${text}`, '_blank');
+            };
+
+            return (
+                <div className="max-w-4xl mx-auto space-y-8 animate-fade-in">
+                    <div className="bg-white/80 backdrop-blur-xl p-10 rounded-[40px] border border-white neo-shadow space-y-8">
+                        <div className="border-b border-slate-100/50 pb-6 flex items-center gap-4">
+                            <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-[16px] flex items-center justify-center text-white shadow-lg"><Icons.Zap /></div>
+                            <h3 className="text-2xl font-bold font-heading text-slate-900 tracking-tight">Gerador de Atividades IA</h3>
+                        </div>
+                        <div className="grid grid-cols-1 gap-6 bg-slate-50/50 p-8 rounded-[32px] border border-slate-100/50">
+                            <div>
+                                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-3 block">Turma alvo (Opcional, para personalização)</label>
+                                <select 
+                                    value={selectedClass} 
+                                    onChange={e => setSelectedClass(e.target.value)}
+                                    className="w-full p-4 bg-white border border-slate-200 rounded-[16px] outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all text-lg font-medium text-slate-700 shadow-sm"
+                                >
+                                    <option value="">Selecione a Turma...</option>
+                                    {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                </select>
+                            </div>
+
+                            <div className="group relative overflow-hidden transition-all focus-within:bg-indigo-50/50 bg-white p-4 rounded-[16px] border border-slate-200 focus-within:border-indigo-300 shadow-sm">
+                                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2 block relative z-10">Tema da Atividade</label>
+                                <input 
+                                    value={topic}
+                                    onChange={e => setTopic(e.target.value)}
+                                    placeholder="Ex: Hidrografia do Brasil, Geopolítica Mundial..."
+                                    className="w-full p-0 bg-transparent border-none outline-none text-xl text-slate-900 placeholder-slate-400 relative z-10 focus:ring-0 leading-relaxed font-bold font-heading"
+                                />
+                            </div>
+                        </div>
+                        
+                        <button 
+                            onClick={generateActivity}
+                            disabled={isGenerating}
+                            className={`w-full p-6 text-lg rounded-[24px] font-bold flex items-center justify-center gap-3 transition-all duration-300 relative overflow-hidden group ${isGenerating ? 'bg-slate-100 text-slate-400' : 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:shadow-xl hover:shadow-indigo-500/30 hover:-translate-y-1 glow-shadow'}`}
+                        >
+                            <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                            <span className="relative z-10 flex items-center gap-3">
+                                {isGenerating ? (
+                                    <><div className="w-5 h-5 border-2 border-white/50 border-t-white rounded-full animate-spin"></div> Criando Mágica...</>
+                                ) : (
+                                    <><Icons.Sparkles /> Gerar Sequência Didática com IA</>
+                                )}
+                            </span>
+                        </button>
+                    </div>
+
+                    {generatedContent && (
+                        <div className="bg-white/90 backdrop-blur-3xl p-10 rounded-[40px] border border-white neo-shadow space-y-8 animate-fade-in relative mt-8">
+                            <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-100/50 pb-6 gap-6">
+                                <h3 className="font-bold text-2xl font-heading text-slate-900 tracking-tight flex items-center gap-3 shrink-0">
+                                    <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0"><Icons.Sparkles width="18" height="18" /></div>
+                                    Sequência Didática
+                                </h3>
+                                
+                                <div className="flex flex-wrap items-center gap-3">
+                                    <button onClick={exportToWord} className="text-[11px] font-bold text-blue-600 hover:text-white hover:bg-blue-600 uppercase tracking-widest transition-all bg-blue-50 px-5 py-2.5 rounded-[12px] border border-blue-100/50 shadow-sm flex items-center gap-2 group">
+                                        <div className="w-4 h-4 group-hover:scale-110 transition-transform"><Icons.FileText /></div>
+                                        Exportar Word
+                                    </button>
+                                    <button onClick={exportToPDF} className="text-[11px] font-bold text-rose-600 hover:text-white hover:bg-rose-600 uppercase tracking-widest transition-all bg-rose-50 px-5 py-2.5 rounded-[12px] border border-rose-100/50 shadow-sm flex items-center gap-2 group">
+                                        <div className="w-4 h-4 group-hover:scale-110 transition-transform"><Icons.FilePdf /></div>
+                                        Exportar PDF
+                                    </button>
+                                    <button onClick={() => setGeneratedContent('')} className="text-[11px] font-bold text-slate-500 hover:text-red-500 hover:bg-red-50 hover:border-red-100 uppercase tracking-widest transition-all bg-white px-5 py-2.5 rounded-[12px] border border-slate-200/60 shadow-sm">
+                                        Limpar
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col lg:flex-row gap-8">
+                                <div className="lg:w-2/3 bg-slate-50/80 p-8 sm:p-12 rounded-[32px] border border-slate-200/60 shadow-inner overflow-x-auto custom-scrollbar">
+                                    <div id="generated-content-wrapper" className="bg-white p-8 rounded-[16px] shadow-sm border border-slate-100" style={{ fontFamily: "Inter, sans-serif" }}>
+                                        <div 
+                                            id="generated-content"
+                                            className="prose prose-slate prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg max-w-none prose-p:leading-relaxed prose-a:text-indigo-600"
+                                            dangerouslySetInnerHTML={{ __html: generatedContent }}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="lg:w-1/3 space-y-6">
+                                    <div className="bg-emerald-50/50 border border-emerald-100 p-8 rounded-[32px] shadow-sm relative overflow-hidden group">
+                                        <div className="absolute top-0 right-0 -mr-6 -mt-6 text-emerald-500/10 group-hover:scale-110 transition-transform duration-500 pointer-events-none">
+                                            <Icons.MessageCircle width="140" height="140"/>
+                                        </div>
+                                        
+                                        <h4 className="font-bold font-heading text-emerald-900 text-xl mb-2 flex items-center gap-2 relative z-10">
+                                            <div className="text-emerald-500"><Icons.MessageCircle /></div>
+                                            Enviar por WhatsApp
+                                        </h4>
+                                        <p className="text-emerald-700/80 text-sm mb-6 relative z-10">
+                                            Compartilhe esta atividade diretamente com alunos ou responsáveis.
+                                        </p>
+                                        
+                                        <div className="space-y-4 relative z-10">
+                                            <div>
+                                                <label className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1.5 block">Número (com DDD)</label>
+                                                <input 
+                                                    type="text"
+                                                    value={waNumber}
+                                                    onChange={e => setWaNumber(e.target.value)}
+                                                    placeholder="Ex: 11987654321"
+                                                    className="w-full p-4 bg-white border border-emerald-200/60 rounded-[16px] outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm font-medium text-slate-700 shadow-sm"
+                                                />
+                                            </div>
+                                            <button 
+                                                onClick={sendViaWhatsApp}
+                                                className="w-full p-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-[16px] font-bold text-[13px] uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 hover:-translate-y-0.5 active:translate-y-0 transition-all font-sans"
+                                            >
+                                                <Icons.Send className="w-4 h-4"/>
+                                                Enviar Mensagem
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-white border border-slate-100 p-8 rounded-[32px] shadow-sm">
+                                        <h4 className="font-bold font-heading text-slate-800 text-lg mb-4 flex items-center gap-2">
+                                            <div className="text-slate-400"><Icons.Download /></div>
+                                            Dicas de Exportação
+                                        </h4>
+                                        <ul className="space-y-4">
+                                            <li className="flex items-start gap-3 text-[13px] text-slate-600 leading-relaxed font-medium">
+                                                <div className="w-5 h-5 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 mt-0.5">1</div>
+                                                <span>A exportação para WORD permite editar o cabeçalho e adicionar o logo da escola posteriormente.</span>
+                                            </li>
+                                            <li className="flex items-start gap-3 text-[13px] text-slate-600 leading-relaxed font-medium">
+                                                <div className="w-5 h-5 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 mt-0.5">2</div>
+                                                <span>A exportação para PDF preserva o layout exato para impressão impecável.</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [user, setUser] = useState(null);
+            const [loading, setLoading] = useState(true);
+            const [classes, setClasses] = useState([]);
+            const [activeTab, setActiveTab] = useState('dashboard');
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [classNameInput, setClassNameInput] = useState('');
+            const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+            useEffect(() => {
+                const unsubscribeAuth = onAuthStateChanged(auth, (u) => {
+                    setUser(u);
+                    setLoading(false);
+                });
+
+                return () => {
+                    unsubscribeAuth();
+                };
+            }, []);
+
+            useEffect(() => {
+                let unsubscribeClasses = () => {};
+                if (user) {
+                    unsubscribeClasses = onSnapshot(query(collection(db, 'classes'), where('teacherId', '==', user.uid)), s => {
+                            setClasses(s.docs.map(d => ({ id: d.id, ...d.data() })));
+                        });
+                }
+                return () => unsubscribeClasses();
+            }, [user]);
+
+            const loginWithGoogle = () => {
+                const provider = new GoogleAuthProvider();
+                signInWithPopup(auth, provider).catch(err => console.error("Login popup failed", err));
+            };
+
+            const logout = () => signOut(auth);
+
+            const handleCreateClass = async () => {
+                if (!classNameInput.trim() || !user) return;
+                try {
+                    await addDoc(collection(db, 'classes'), { 
+                        name: classNameInput, 
+                        teacherId: user.uid, 
+                        createdAt: new Date().toISOString() 
+                    });
+                    setIsModalOpen(false);
+                    setClassNameInput('');
+                } catch (e) { alert("Erro ao criar turma."); }
+            };
+
+            const handleDelete = async (id) => {
+                if (window.confirm("Excluir turma?")) {
+                    await deleteDoc(doc(db, 'classes', id));
+                }
+            };
+
+            if (loading) return (
+                <div className="h-screen flex flex-col items-center justify-center bg-white space-y-4">
+                    <div className="w-10 h-10 border-4 border-slate-700 border-t-transparent rounded-full animate-spin"></div>
+                    <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">Sincronizando...</p>
+                </div>
+            );
+
+            if (!user) return (
+                <div className="h-screen bg-slate-900 flex items-center justify-center p-6 relative overflow-hidden font-sans">
+                    {/* Animated background specific for login */}
+                    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                        <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] bg-emerald-500/20 blur-[120px] rounded-full animate-pulse object-cover"></div>
+                        <div className="absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] bg-blue-600/20 blur-[140px] rounded-full animate-pulse object-cover" style={{ animationDelay: '2s' }}></div>
+                    </div>
+                    
+                    <div className="bg-white/10 backdrop-blur-2xl p-12 rounded-[48px] max-w-sm w-full text-center space-y-12 border border-white/20 shadow-2xl relative z-10 animate-fade-in group hover:bg-white-[0.15] transition-all duration-700">
+                        <div className="w-28 h-28 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-[32px] border-4 border-white/10 flex items-center justify-center text-white mx-auto shadow-[0_0_60px_rgba(16,185,129,0.4)] group-hover:scale-105 group-hover:rotate-6 transition-all duration-500">
+                            <Icons.Globe width="48" height="48" />
+                        </div>
+                        <div>
+                            <h1 className="text-5xl font-black text-white tracking-tight font-heading mb-4 drop-shadow-md">GeoGrade <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">IA</span></h1>
+                            <p className="text-slate-300 font-medium text-[15px] leading-relaxed tracking-wide">Tecnologia Inteligente para Professores de Geografia.</p>
+                        </div>
+                        <button onClick={loginWithGoogle} className="w-full bg-white text-slate-900 p-6 rounded-[24px] font-bold text-[17px] flex items-center justify-center gap-4 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(255,255,255,0.25)] active:translate-y-0 transition-all duration-300">
+                            <svg className="w-6 h-6" viewBox="0 0 24 24">
+                                <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                            </svg>
+                            Acessar com Google
+                        </button>
+                    </div>
+                </div>
+            );
+
+            const NavItems = [
+                { id: 'dashboard', label: 'Dashboard', icon: Icons.LayoutDashboard },
+                { id: 'corrector', label: 'Corretor IA', icon: Icons.BrainCircuit },
+                { id: 'generator', label: 'Gerador IA', icon: Icons.FilePlus },
+                { id: 'students', label: 'Alunos', icon: Icons.Users },
+                { id: 'gradebook', label: 'Diário/Notas', icon: Icons.BookOpen },
+            ];
+
+            const SidebarContent = () => (
+                <div className="flex flex-col h-full bg-white/40">
+                    <div className="px-8 pt-10 pb-6 flex items-center gap-3 text-slate-900 font-bold text-3xl mb-4 tracking-tighter font-heading border-b border-white/50">
+                        <div className="bg-gradient-to-br from-emerald-400 to-teal-500 p-2.5 rounded-[16px] text-white shadow-md shadow-emerald-500/20"><Icons.Globe /></div> GeoGrade
+                    </div>
+                    <nav className="flex-1 px-5 lg:px-6 space-y-2 relative pt-4">
+                        {NavItems.map(item => (
+                            <button 
+                                key={item.id} 
+                                onClick={() => { setActiveTab(item.id); setIsMobileMenuOpen(false); }} 
+                                className={`w-full flex items-center gap-4 px-5 py-4 rounded-[20px] transition-all duration-300 ${activeTab === item.id ? 'bg-slate-900 text-white font-bold neo-shadow shadow-slate-900/10 -translate-y-1' : 'text-slate-500 hover:bg-white/80 hover:text-slate-900 font-bold hover:shadow-sm'}`}
+                            >
+                                <div className={`${activeTab === item.id ? 'text-emerald-400' : 'text-slate-400'} transition-colors`}><item.icon /></div> 
+                                <span className="tracking-wide">{item.label}</span>
+                            </button>
+                        ))}
+                    </nav>
+                    <div className="p-6 mt-auto border-t border-white/50 backdrop-blur-md bg-white/30">
+                        <div className="p-4 flex items-center justify-between bg-white border border-white neo-shadow rounded-[20px] hover:border-emerald-200 transition-all group cursor-pointer w-full text-left -translate-y-0.5" onClick={logout} title="Sair da conta">
+                            <div className="flex items-center gap-4 overflow-hidden">
+                                {user.photoURL ? (
+                                    <img src={user.photoURL} className="w-12 h-12 rounded-[16px] object-cover border-2 border-white shadow-sm" alt="avatar" />
+                                ) : (
+                                    <div className="w-12 h-12 rounded-[16px] bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold flex items-center justify-center text-xl flex-shrink-0 shadow-sm border-2 border-white">
+                                        {(user.displayName || user.email || 'U')[0].toUpperCase()}
+                                    </div>
+                                )}
+                                <div className="truncate">
+                                    <div className="truncate text-[15px] font-bold text-slate-900 font-heading">{user.displayName || 'Professor'}</div>
+                                    <div className="truncate text-[11px] font-bold text-slate-500 tracking-widest uppercase mt-0.5">{user.email}</div>
+                                </div>
+                            </div>
+                            <div className="text-slate-300 group-hover:text-red-500 transition-colors flex-shrink-0 ml-1">
+                                <Icons.LogOut className="w-5 h-5" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            return (
+                <div className="flex h-screen bg-[#f4f4f5] bg-mesh text-slate-800 relative z-0">
+                    <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-white/40 to-transparent pointer-events-none z-10"></div>
+                    
+                    {/* Desktop Sidebar */}
+                    <aside className="w-[300px] bg-white/40 backdrop-blur-3xl border-r border-white/60 flex flex-col hidden lg:flex shadow-[8px_0_32px_rgba(0,0,0,0.03)] relative z-50">
+                        <SidebarContent />
+                    </aside>
+
+                    {/* Mobile Menu Backdrop */}
+                    {isMobileMenuOpen && (
+                        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] lg:hidden" onClick={() => setIsMobileMenuOpen(false)}>
+                            <div className="w-[85%] max-w-sm h-full bg-white/90 backdrop-blur-3xl flex flex-col shadow-2xl border-r border-white/50" onClick={e => e.stopPropagation()}>
+                                <SidebarContent />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Main */}
+                    <main className="flex-1 flex flex-col overflow-hidden relative z-20">
+                        <header className="h-28 glass-panel border-b border-white/60 px-6 lg:px-12 flex items-center justify-between sticky top-0 z-40 transition-all shadow-sm shadow-slate-900/5">
+                            <div className="flex items-center gap-4">
+                                <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden text-slate-600 p-3 hover:bg-white/50 rounded-2xl border border-transparent hover:border-slate-200/50 transition-all">
+                                    <Icons.Menu />
+                                </button>
+                                <div>
+                                    <h2 className="text-3xl font-bold text-slate-900 tracking-tight font-heading drop-shadow-sm">{NavItems.find(n => n.id === activeTab)?.label}</h2>
+                                    <p className="text-[13px] text-slate-500 font-medium font-sans mt-1 tracking-wide">Bem-vindo de volta, {user.displayName?.split(' ')[0] || 'Professor'}</p>
+                                </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-6">
+                                <div className="hidden sm:flex items-center gap-3 px-5 py-2.5 bg-white/50 border border-white rounded-[20px] shadow-sm">
+                                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_12px_rgba(16,185,129,0.8)]"></div>
+                                    <span className="text-[11px] font-bold uppercase tracking-widest text-slate-600">Sistema Online</span>
+                                </div>
+                                <button onClick={() => setIsModalOpen(true)} className="bg-slate-900 text-white px-6 py-4 rounded-[20px] font-bold uppercase tracking-widest text-[11px] flex items-center gap-3 hover:bg-slate-800 hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-900/20 active:translate-y-0 transition-all duration-300 border border-slate-800">
+                                    <Icons.Plus className="w-5 h-5" /> <span className="hidden sm:inline">Nova Turma</span>
+                                </button>
+                            </div>
+                        </header>
+
+                        <div className="flex-1 overflow-y-auto custom-scrollbar p-6 lg:p-10 pb-32">
+                            {activeTab === 'dashboard' ? (
+                                <div className="space-y-10 animate-fade-in max-w-6xl mx-auto">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                                        <div onClick={() => setActiveTab('students')} className="bg-white/60 backdrop-blur-xl p-8 rounded-[32px] border border-white neo-shadow hover-lift cursor-pointer animate-fade-stagger-1 group">
+                                            <div className="w-16 h-16 bg-gradient-to-br from-emerald-100 to-emerald-50 rounded-[20px] flex items-center justify-center text-emerald-600 mb-8 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500 shadow-sm border border-emerald-100"><Icons.Users /></div>
+                                            <p className="text-slate-500 text-[11px] font-bold uppercase tracking-widest mb-2">Turmas Ativas</p>
+                                            <h3 className="text-5xl font-bold font-heading text-slate-900 tracking-tight">{classes.length}</h3>
+                                        </div>
+                                        <div onClick={() => setActiveTab('corrector')} className="bg-slate-900 p-8 rounded-[32px] border border-slate-800 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.3)] hover:-translate-y-2 transition-all duration-500 cursor-pointer animate-fade-stagger-2 group relative overflow-hidden">
+                                            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                                            <div className="w-16 h-16 bg-white/10 rounded-[20px] flex items-center justify-center text-blue-400 mb-8 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-500 border border-white/10"><Icons.BrainCircuit /></div>
+                                            <p className="text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-2 relative z-10">IA Disponível</p>
+                                            <h3 className="text-5xl font-bold text-white tracking-tight relative z-10 font-heading">Pro</h3>
+                                            <div className="absolute top-8 right-8 w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.8)]"></div>
+                                        </div>
+                                        <div onClick={() => setActiveTab('gradebook')} className="bg-white/60 backdrop-blur-xl p-8 rounded-[32px] border border-white neo-shadow hover-lift cursor-pointer animate-fade-stagger-3 group">
+                                            <div className="w-16 h-16 bg-gradient-to-br from-amber-100 to-amber-50 rounded-[20px] flex items-center justify-center text-amber-600 mb-8 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500 shadow-sm border border-amber-100"><Icons.BookOpen /></div>
+                                            <p className="text-slate-500 text-[11px] font-bold uppercase tracking-widest mb-2">Avaliações</p>
+                                            <h3 className="text-5xl font-bold font-heading text-slate-900 tracking-tight">Ativo</h3>
+                                        </div>
+                                        <div className="bg-white/60 backdrop-blur-xl p-8 rounded-[32px] border border-white neo-shadow cursor-default animate-fade-stagger-3 group">
+                                            <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-purple-50 rounded-[20px] flex items-center justify-center text-purple-600 mb-8 shadow-sm border border-purple-100"><Icons.TrendingUp /></div>
+                                            <p className="text-slate-500 text-[11px] font-bold uppercase tracking-widest mb-2">Eficiência Global</p>
+                                            <h3 className="text-5xl font-bold font-mono text-slate-900 tracking-tight">+85<span className="text-3xl text-slate-400 font-sans">%</span></h3>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-white/80 backdrop-blur-xl rounded-[40px] border border-white neo-shadow overflow-hidden animate-fade-stagger-2">
+                                        <div className="p-10 border-b border-slate-100/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                            <h4 className="font-bold text-slate-900 text-2xl font-heading">Turmas Recentes</h4>
+                                            <div className="text-[11px] font-bold text-slate-500 uppercase tracking-widest bg-white px-5 py-2.5 rounded-full border border-slate-200/60 shadow-sm">{classes.length} Turmas Encontradas</div>
+                                        </div>
+                                        <div className="divide-y divide-slate-100/50">
+                                            {classes.map((cls, idx) => (
+                                                <div key={cls.id} className="p-8 px-10 flex flex-col sm:flex-row sm:items-center justify-between hover:bg-white transition-all duration-300 group" style={{ animationDelay: `${idx * 50}ms` }}>
+                                                    <div className="flex items-center gap-6 mb-4 sm:mb-0">
+                                                        <div className="w-16 h-16 bg-slate-900 rounded-[20px] flex items-center justify-center font-bold text-2xl text-white shadow-xl shadow-slate-900/15 group-hover:scale-105 group-hover:rotate-3 transition-all duration-500 font-heading">{cls.name[0]}</div>
+                                                        <div>
+                                                            <div className="font-bold text-xl text-slate-900 tracking-tight font-heading">{cls.name}</div>
+                                                            <div className="text-[11px] text-slate-500 font-bold uppercase tracking-widest mt-1.5 flex items-center gap-2">
+                                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                                                Ativa • Criada em {new Date(cls.createdAt).toLocaleDateString()}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex gap-3">
+                                                        <button onClick={() => { setActiveTab('students'); }} className="p-3.5 bg-white border border-slate-200/60 shadow-sm text-slate-400 hover:text-slate-900 hover:border-slate-300 hover:shadow-md rounded-[16px] transition-all hover:-translate-y-1">
+                                                            <Icons.Users />
+                                                        </button>
+                                                        <button onClick={() => handleDelete(cls.id)} className="p-3.5 bg-white border border-slate-200/60 shadow-sm text-slate-400 hover:text-red-500 hover:border-red-200 hover:bg-red-50 hover:shadow-md rounded-[16px] transition-all hover:-translate-y-1">
+                                                            <Icons.Trash2 />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            {classes.length === 0 && (
+                                                <div className="p-24 text-center">
+                                                    <div className="w-24 h-24 bg-gradient-to-br from-slate-100 to-white rounded-[32px] flex items-center justify-center mx-auto mb-8 border-2 border-dashed border-slate-200 shadow-sm opacity-75 animate-pulse">
+                                                        <Icons.Users className="w-10 h-10 text-slate-300" />
+                                                    </div>
+                                                    <h3 className="text-2xl font-bold font-heading text-slate-900 mb-2">Sua jornada começa aqui</h3>
+                                                    <p className="text-slate-500 font-medium text-[15px] mb-8 max-w-sm mx-auto">Adicione sua primeira turma para começar a organizar alunos e utilizar o poder da inteligência artificial.</p>
+                                                    <button onClick={() => setIsModalOpen(true)} className="bg-slate-900 text-white px-8 py-4 rounded-[20px] font-bold text-[13px] uppercase tracking-widest hover:bg-slate-800 transition-all hover:-translate-y-1 hover:shadow-xl shadow-slate-900/20 active:translate-y-0 relative overflow-hidden group inline-flex mx-auto border border-slate-800">
+                                                        <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
+                                                        <span className="relative z-10 flex items-center gap-3">
+                                                            <Icons.Plus className="w-5 h-5"/> Criar Primeira Turma
+                                                        </span>
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : activeTab === 'corrector' ? (
+                                <CorrectorView classes={classes} user={user} />
+                            ) : activeTab === 'generator' ? (
+                                <GeneratorView classes={classes} />
+                            ) : activeTab === 'students' ? (
+                                <StudentsView classes={classes} user={user} />
+                            ) : activeTab === 'gradebook' ? (
+                                <GradebookView classes={classes} user={user} />
+                            ) : null}
+                        </div>
+                    </main>
+
+                    {/* Modal */}
+                    {isModalOpen && (
+                        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-6 z-[200] animate-fade-in">
+                            <div className="bg-white/90 backdrop-blur-2xl p-10 rounded-[40px] shadow-2xl w-full max-w-md space-y-8 animate-fade-in border border-white">
+                                <div className="text-center">
+                                    <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-800 mx-auto mb-6 shadow-sm"><Icons.Plus /></div>
+                                    <h3 className="text-3xl font-bold text-slate-900 tracking-tight font-heading">Nova Turma</h3>
+                                    <p className="text-slate-500 font-medium text-[15px] mt-2">Organize seus alunos por disciplinas e turmas</p>
+                                </div>
+                                <div className="space-y-6">
+                                    <input 
+                                        className="w-full p-5 bg-white border border-slate-200 rounded-[24px] outline-none focus:ring-4 focus:ring-slate-900/10 focus:border-slate-900 transition-all font-semibold text-slate-800 text-lg text-center shadow-sm" 
+                                        placeholder="Ex: 9º Ano A - Vespertino" 
+                                        value={classNameInput} 
+                                        onChange={e => setClassNameInput(e.target.value)} 
+                                        autoFocus
+                                    />
+                                    <div className="flex gap-4">
+                                        <button onClick={() => setIsModalOpen(false)} className="flex-1 p-5 font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-[24px] transition-all">Cancelar</button>
+                                        <button onClick={handleCreateClass} className="flex-1 bg-slate-900 text-white p-5 rounded-[24px] font-bold text-lg shadow-xl shadow-slate-900/20 hover:-translate-y-1 active:translate-y-0 transition-all">Criar Turma</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        
+        async function initApp() {
+            try {
+                const configRes = await fetch('/firebase-applet-config.json');
+                const firebaseConfig = await configRes.json();
+                
+                const firebaseApp = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js");
+                const firebaseAuth = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js");
+                const firebaseFirestore = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
+                
+                const app = firebaseApp.initializeApp(firebaseConfig);
+                db = firebaseFirestore.getFirestore(app, firebaseConfig.firestoreDatabaseId);
+                auth = firebaseAuth.getAuth(app);
+                
+                onSnapshot = firebaseFirestore.onSnapshot;
+                query = firebaseFirestore.query;
+                collection = firebaseFirestore.collection;
+                where = firebaseFirestore.where;
+                addDoc = firebaseFirestore.addDoc;
+                deleteDoc = firebaseFirestore.deleteDoc;
+                doc = firebaseFirestore.doc;
+                updateDoc = firebaseFirestore.updateDoc;
+                
+                onAuthStateChanged = firebaseAuth.onAuthStateChanged;
+                signInWithPopup = firebaseAuth.signInWithPopup;
+                signOut = firebaseAuth.signOut;
+                GoogleAuthProvider = firebaseAuth.GoogleAuthProvider;
+
+                root.render(<App />);
+            } catch (err) {
+                console.error("Failed to initialize app:", err);
+                root.render(<div className="p-10 text-center text-red-500 font-bold">Erro ao inicializar Firebase.</div>);
+            }
+        }
+        
+        initApp();
+    </script>
+</body>
+</html>

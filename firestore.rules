@@ -1,0 +1,94 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() { return request.auth != null; }
+    function isValidId(id) { return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    function isValidClass(data) {
+      return data.keys().hasAll(['name', 'teacherId', 'createdAt'])
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 100
+        && data.teacherId == request.auth.uid
+        && data.createdAt is string && data.createdAt.size() <= 50;
+    }
+
+    function isValidStudent(data) {
+      return data.keys().hasAll(['name', 'classId', 'teacherId', 'grades', 'createdAt'])
+        && data.keys().size() == 5
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 100
+        && data.classId is string && data.classId.size() <= 128
+        && data.teacherId == request.auth.uid
+        && data.grades is map
+        && data.createdAt is string && data.createdAt.size() <= 50;
+    }
+
+    function isValidPeriod(data) {
+      return data.keys().hasAll(['name', 'classId', 'teacherId', 'startDate', 'endDate', 'createdAt'])
+        && data.keys().size() == 6
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 100
+        && data.classId is string && data.classId.size() <= 128
+        && data.teacherId == request.auth.uid
+        && data.startDate is string && data.startDate.size() <= 50
+        && data.endDate is string && data.endDate.size() <= 50
+        && data.createdAt is string && data.createdAt.size() <= 50;
+    }
+
+    function isValidCorrection(data) {
+      return data.keys().hasAll(['teacherId', 'className', 'question', 'answer', 'result', 'createdAt'])
+        && data.teacherId == request.auth.uid
+        && data.className is string && data.className.size() <= 100
+        && data.question is string && data.question.size() <= 5000
+        && data.answer is string && data.answer.size() <= 10000
+        && data.result is map
+        && data.createdAt is string && data.createdAt.size() <= 50;
+    }
+
+    match /classes/{classId} {
+      allow read: if isSignedIn() && existing().teacherId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.teacherId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(classId) && isValidClass(incoming());
+      allow update: if false;
+      allow delete: if isSignedIn() && isValidId(classId) && existing().teacherId == request.auth.uid;
+    }
+
+    match /students/{studentId} {
+      allow read: if isSignedIn() && existing().teacherId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.teacherId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(studentId) && isValidStudent(incoming());
+      allow update: if isSignedIn() 
+                    && isValidId(studentId)
+                    && existing().teacherId == request.auth.uid
+                    && incoming().teacherId == request.auth.uid
+                    && incoming().name is string && incoming().name.size() > 0 && incoming().name.size() <= 100
+                    && incoming().diff(existing()).affectedKeys().hasOnly(['grades', 'name']);
+      allow delete: if isSignedIn() && isValidId(studentId) && existing().teacherId == request.auth.uid;
+    }
+
+    match /corrections/{correctionId} {
+      allow read: if isSignedIn() && existing().teacherId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.teacherId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(correctionId) && isValidCorrection(incoming());
+      allow update: if false;
+      allow delete: if isSignedIn() && isValidId(correctionId) && existing().teacherId == request.auth.uid;
+    }
+    match /periods/{periodId} {
+      allow read: if isSignedIn() && existing().teacherId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.teacherId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(periodId) && isValidPeriod(incoming());
+      allow update: if isSignedIn() 
+                    && isValidId(periodId)
+                    && existing().teacherId == request.auth.uid
+                    && incoming().teacherId == request.auth.uid
+                    && incoming().name is string && incoming().name.size() > 0 && incoming().name.size() <= 100
+                    && incoming().startDate is string && incoming().startDate.size() <= 50
+                    && incoming().endDate is string && incoming().endDate.size() <= 50
+                    && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'startDate', 'endDate']);
+      allow delete: if isSignedIn() && isValidId(periodId) && existing().teacherId == request.auth.uid;
+    }
+  }
+}

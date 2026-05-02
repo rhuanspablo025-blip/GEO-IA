@@ -1,0 +1,74 @@
+{
+  "entities": {
+    "Class": {
+      "title": "Class",
+      "description": "A class group of students taught by a teacher.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "teacherId": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["name", "teacherId", "createdAt"]
+    },
+    "Student": {
+      "title": "Student",
+      "description": "A student belonging to a class.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "classId": { "type": "string" },
+        "teacherId": { "type": "string" },
+        "grades": { "type": "object" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["name", "classId", "teacherId", "createdAt"]
+    },
+    "Period": {
+      "title": "Period",
+      "description": "An academic period (semester, bimester) for a class.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "classId": { "type": "string" },
+        "teacherId": { "type": "string" },
+        "startDate": { "type": "string", "format": "date" },
+        "endDate": { "type": "string", "format": "date" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["name", "classId", "teacherId", "startDate", "endDate", "createdAt"]
+    },
+    "Correction": {
+      "title": "Correction",
+      "description": "An AI correction of a student's answer.",
+      "type": "object",
+      "properties": {
+        "teacherId": { "type": "string" },
+        "className": { "type": "string", "description": "Name of the class." },
+        "question": { "type": "string" },
+        "answer": { "type": "string" },
+        "result": { "type": "object" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["teacherId", "className", "question", "answer", "result", "createdAt"]
+    }
+  },
+  "firestore": {
+    "classes": {
+      "schema": "Class",
+      "description": "Collection of all classes."
+    },
+    "students": {
+      "schema": "Student",
+      "description": "Collection of all students in classes."
+    },
+    "corrections": {
+      "schema": "Correction",
+      "description": "Collection of all AI corrections."
+    },
+    "periods": {
+      "schema": "Period",
+      "description": "Collection of all academic periods."
+    }
+  }
+}
