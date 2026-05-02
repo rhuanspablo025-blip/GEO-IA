@@ -1281,8 +1281,17 @@
         
         async function initApp() {
             try {
-                const configRes = await fetch('./firebase-applet-config.json');
-                const firebaseConfig = await configRes.json();
+                // Configuração do Firebase diretamente incorporada para evitar problemas de caminho no GitHub Pages
+                const firebaseConfig = {
+                  "projectId": "gen-lang-client-0236814685",
+                  "appId": "1:283306291108:web:178e50bdc7a05041ea9b31",
+                  "apiKey": "AIzaSyAqK0kI5TlVJMYXfRo2yxwS9xujcPR9lJc",
+                  "authDomain": "gen-lang-client-0236814685.firebaseapp.com",
+                  "firestoreDatabaseId": "ai-studio-c42c8fd0-9cf5-4d69-895d-03178d953e0c",
+                  "storageBucket": "gen-lang-client-0236814685.firebasestorage.app",
+                  "messagingSenderId": "283306291108",
+                  "measurementId": ""
+                };
                 
                 const firebaseApp = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js");
                 const firebaseAuth = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js");
